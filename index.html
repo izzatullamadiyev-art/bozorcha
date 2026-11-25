@@ -23,6 +23,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var
 .logo{font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;font-weight:700;color:var(--brand)}
 .cartbtn{border:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:999px;font:inherit;font-weight:700;cursor:pointer}
 .cartbtn:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+#toggle_p:focus-visible{outline:2px solid var(--sun);border-radius:4px}
 .hero{padding:40px 16px 28px;max-width:960px;margin:0 auto}
 .hero h1{font-family:Georgia,serif;font-size:clamp(2rem,7vw,3.4rem);line-height:1.1;margin:0 0 12px;max-width:16ch}
 .hero p{color:var(--muted);max-width:46ch;margin:0}
@@ -135,13 +136,26 @@ dialog input,dialog select,dialog textarea{width:100%;padding:9px 12px;border-ra
   <label>Aloqa (telefon yoki Telegram)<input id="f_contact" maxlength="40" placeholder="+998 90 123 45 67"></label>
   <div class="acts"><button id="cancel" type="button">Bekor qilish</button><button class="go" id="save" type="button">Joylash</button></div>
 </dialog>
+
 <dialog id="adlg">
-  <h2>Kirish yoki roʻyxatdan oʻtish</h2>
+  <h2 id="a_title">Kirish</h2>
   <label>Email<input id="a_e" type="email" autocomplete="email"></label>
-  <label>Parol (kamida 6 belgi)<input id="a_p" type="password" autocomplete="current-password"></label>
+  <div style="position:relative">
+    <label>Parol (kamida 6 belgi)
+      <input id="a_p" type="password" autocomplete="current-password" style="padding-right:40px">
+    </label>
+    <button type="button" id="toggle_p" aria-label="Parolni ko‘rsatish" style="position:absolute;right:8px;bottom:8px;background:none;border:0;font-size:1.1rem;cursor:pointer">👁️</button>
+  </div>
+  <label id="lbl_cp" hidden>Parolni takrorlang<input id="a_cp" type="password" autocomplete="new-password"></label>
+  <label id="lbl_city" hidden>Shahar<input id="a_city" placeholder="Masalan: Toshkent"></label>
   <p id="a_m" style="color:var(--muted);font-size:.9rem;min-height:1.2em;margin:8px 0 0"></p>
-  <div class="acts"><button id="a_c" type="button">Yopish</button><button id="a_up" type="button">Roʻyxatdan oʻtish</button><button class="go" id="a_in" type="button">Kirish</button></div>
+  <div class="acts">
+    <button id="a_c" type="button">Yopish</button>
+    <button id="a_up" type="button">Ro‘yxatdan o‘tish</button>
+    <button class="go" id="a_in" type="button">Kirish</button>
+  </div>
 </dialog>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -149,7 +163,7 @@ var SB_URL="https://nlgknzjdwlkmpvwnnijt.supabase.co";
 var SB_KEY="sb_publishable_hRJB9yq_W9wtckXSjWIcjw___lNlXe0";
 var sb=supabase.createClient(SB_URL,SB_KEY);
 var $=function(i){return document.getElementById(i)};
-var tab="sell",query="",items=[],bans=[],bi=0,user=null;
+var tab="sell",query="",items=[],bans=[],bi=0,user=null,isUp=false;
 var cols=["#1d3f9a","#0b7f86","#7a3fb0","#b5532a","#2f7d4f","#a8324e"];
 function toast(t){var e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove("show")},2200)}
 function fmt(n){return n?Number(n).toLocaleString("ru-RU")+" so\u02bbm":"Kelishilgan narx"}
@@ -164,7 +178,7 @@ function tabs(){
 }
 function draw(){
   var g=$("grid");g.innerHTML="";
-  var list=items.filter(function(x){return x.type===tab&&(x.name||"").toLowerCase().indexOf(query)>-1});
+  var list=items.filter(function(x){return x.type===tab&&((x.name||"").toLowerCase().indexOf(query)>-1||(x.descr||"").toLowerCase().indexOf(query)>-1)});
   if(!list.length){g.innerHTML='<div class="empty">Hozircha e\u02bclon yo\u02bbq. Birinchi bo\u02bblib \u201c+ e\u02bclon berish\u201d tugmasini bosing.</div>';return}
   list.forEach(function(x){
     var d=document.createElement("article");d.className="card";
@@ -235,27 +249,61 @@ function setUser(u){
   user=u;$("authbtn").textContent=u?"Chiqish":"Kirish";
   draw();reels();
 }
+function resetAuthModal(){
+  isUp=false;
+  $("a_title").textContent="Kirish";
+  $("lbl_cp").hidden=true;
+  $("lbl_city").hidden=true;
+  $("a_cp").value="";
+  $("a_city").value="";
+  $("a_m").textContent="";
+  $("a_up").style.display="inline";
+  $("a_in").textContent="Kirish";
+  $("a_p").type="password";
+  $("a_p").autocomplete="current-password";
+  $("toggle_p").textContent="👁️";
+}
 $("authbtn").onclick=function(){
   if(user){sb.auth.signOut().then(function(){toast("Chiqdingiz")})}
-  else{$("a_m").textContent="";$("adlg").showModal()}
+  else{resetAuthModal();$("adlg").showModal()}
 };
 $("a_c").onclick=function(){$("adlg").close()};
+$("toggle_p").onclick=function(){
+  var p=$("a_p");
+  p.type=p.type==="password"?"text":"password";
+  $("toggle_p").textContent=p.type==="password"?"👁️":"🙈";
+};
 function authDo(up){
-  var e=$("a_e").value.trim(),p=$("a_p").value;
+  var e=$("a_e").value.trim(),p=$("a_p").value,cp=$("a_cp").value,city=$("a_city").value.trim();
   if(!e||p.length<6){$("a_m").textContent="Email va kamida 6 belgili parol kiriting.";return}
+  if(up&&p!==cp){$("a_m").textContent="Parollar mos kelmadi.";return}
+  if(up&&!city){$("a_m").textContent="Iltimos, yashash shahringizni kiriting.";return}
   $("a_m").textContent="Kuting\u2026";
-  var f=up?sb.auth.signUp({email:e,password:p}):sb.auth.signInWithPassword({email:e,password:p});
+  var f=up?sb.auth.signUp({email:e,password:p,options:{data:{city:city}}}):sb.auth.signInWithPassword({email:e,password:p});
   f.then(function(r){
     if(r.error){$("a_m").textContent="Xato: "+r.error.message;return}
     if(up&&!r.data.session){$("a_m").textContent="Pochtangizga tasdiqlash xati yuborildi. Havolani bosing, keyin kiring.";return}
     $("adlg").close();toast("Xush kelibsiz!");
   });
 }
-$("a_in").onclick=function(){authDo(false)};
-$("a_up").onclick=function(){authDo(true)};
+$("a_up").onclick=function(){
+  if(!isUp){
+    isUp=true;
+    $("a_title").textContent="Ro‘yxatdan o‘tish";
+    $("lbl_cp").hidden=false;
+    $("lbl_city").hidden=false;
+    $("a_up").style.display="none";
+    $("a_in").textContent="Ro‘yxatdan o‘tish";
+    $("a_p").autocomplete="new-password";
+    $("a_m").textContent="";
+  }else{
+    authDo(true);
+  }
+};
+$("a_in").onclick=function(){authDo(isUp)};
 $("q").oninput=function(e){query=e.target.value.toLowerCase().trim();draw()};
 $("new").onclick=function(){
-  if(!user){toast("Avval tizimga kiring");$("a_m").textContent="";$("adlg").showModal();return}
+  if(!user){toast("Avval tizimga kiring");resetAuthModal();$("adlg").showModal();return}
   $("f_type").value=tab;$("dlg").showModal();
 };
 $("cancel").onclick=function(){$("dlg").close()};
