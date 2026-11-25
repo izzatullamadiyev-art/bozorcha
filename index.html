@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bozorcha — hamma sotadi, hamma sotib oladi</title>
+<style>
+:root{
+  --bg:#f3f6fb;--surface:#fff;--ink:#14213d;--muted:#5b6784;--line:#d9e0ee;
+  --brand:#1d3f9a;--brand-ink:#fff;--accent:#0fa3a3;--sun:#f2b134;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1426;--surface:#17203a;--ink:#eef2fb;--muted:#9aa6c4;--line:#27335a;
+  --brand:#6c8cff;--brand-ink:#0e1426;--accent:#3cd0d0;--sun:#f2b134;color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#0e1426;--surface:#17203a;--ink:#eef2fb;--muted:#9aa6c4;--line:#27335a;--brand:#6c8cff;--brand-ink:#0e1426;--accent:#3cd0d0;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.5}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.logo{font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;font-weight:700;color:var(--brand)}
+.cartbtn{border:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:999px;font:inherit;font-weight:700;cursor:pointer}
+.cartbtn:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.hero{padding:40px 16px 28px;max-width:960px;margin:0 auto}
+.hero h1{font-family:Georgia,serif;font-size:clamp(2rem,7vw,3.4rem);line-height:1.1;margin:0 0 12px;max-width:16ch}
+.hero p{color:var(--muted);max-width:46ch;margin:0}
+.band{height:10px;background:repeating-linear-gradient(90deg,var(--brand) 0 24px,var(--accent) 24px 48px,var(--sun) 48px 72px)}
+.tools{max-width:960px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.search{flex:1;min-width:160px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.grid{max-width:960px;margin:0 auto;padding:12px 16px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.pic{height:130px;display:grid;place-items:center;font-size:3.4rem}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.body h3{margin:0;font-size:1.02rem}
+.body small{color:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px}
+.price{font-weight:700}
+.add{border:0;background:var(--accent);color:#06292b;font:inherit;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer}
+.empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:30px}
+aside{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s;z-index:10;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+aside.open{transform:none}
+.ah{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.ah h2{margin:0;font-size:1.2rem}
+.x{border:0;background:none;color:var(--ink);font-size:1.6rem;cursor:pointer}
+.items{flex:1;overflow:auto;padding:8px 16px}
+.it{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.it .e{font-size:1.8rem}
+.it .t{flex:1}
+.it .t b{display:block;font-size:.95rem}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;font-size:1rem}
+.foot{padding:14px 16px;border-top:1px solid var(--line)}
+.tot{display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;margin-bottom:10px}
+.buy{width:100%;border:0;background:var(--brand);color:var(--brand-ink);font:inherit;font-weight:700;padding:12px;border-radius:12px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){aside,.toast{transition:none}}
+
+.tabs{max-width:960px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.post{background:var(--brand);color:var(--brand-ink);border:0;border-radius:999px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);width:min(420px,92vw);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin:0 0 10px}
+label{display:block;font-size:.9rem;color:var(--muted);margin-top:10px}
+dialog input,dialog select,dialog textarea{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.acts{display:flex;gap:8px;margin-top:16px}
+.acts button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.acts .go{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.tag{font-size:.78rem;padding:2px 8px;border-radius:999px;background:var(--sun);color:#3a2a00;align-self:flex-start}
+.tag.want{background:var(--accent);color:#06292b}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;text-decoration:underline}
+.note{max-width:960px;margin:0 auto;padding:0 16px;color:var(--muted);font-size:.9rem}
+#promo{max-width:960px;margin:0 auto;padding:8px 16px}
+.banner{border-radius:16px;padding:22px 20px;background:linear-gradient(120deg,var(--brand),var(--accent));color:#fff;min-height:96px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.banner b{font-family:Georgia,serif;font-size:1.4rem}
+.banner span{opacity:.92}
+.banner{position:relative;overflow:hidden}
+.banner .in{animation:bin .6s ease}
+@keyframes bin{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+.banner .bar{position:absolute;left:0;bottom:0;height:4px;background:rgba(255,255,255,.85);animation:bar 5s linear forwards}
+@keyframes bar{from{width:0}to{width:100%}}
+.galw{position:relative}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+.gal img{flex:0 0 100%;width:100%;height:180px;object-fit:cover;scroll-snap-align:start;background:var(--line)}
+.cnt{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:1px 9px;font-size:.78rem}
+.reel.img .big{display:none}
+@media (prefers-reduced-motion:reduce){.banner .in,.banner .bar{animation:none}}
+.rt{margin:18px 0 8px;font-size:1.15rem}
+.reels{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
+.reel{flex:0 0 150px;aspect-ratio:9/16;border-radius:16px;scroll-snap-align:start;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;color:#fff;border:0;font:inherit;text-align:left;cursor:pointer}
+.reel .big{position:absolute;top:22%;left:0;right:0;text-align:center;font-size:3.2rem}
+.reel::after{content:"";position:absolute;inset:auto 0 0 0;height:60%;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.reel>*:not(.big){position:relative;z-index:1}
+.reel b{font-size:.92rem}
+.reel small{opacity:.9}
+.reel .new{align-self:flex-start;background:var(--sun);color:#3a2a00;border-radius:999px;padding:1px 8px;font-size:.72rem;margin-bottom:4px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+</head>
+<body>
+<header>
+  <div class="logo">Bozorcha</div>
+  <div style="display:flex;gap:8px"><button class="chip" id="authbtn">Kirish</button><button class="post" id="new">+ eʼlon berish</button></div>
+</header>
+<div class="band"></div>
+<section class="hero">
+  <h1>Hamma sotadi, hamma sotib oladi</h1>
+  <p>Tuflingiz ortiqchami yoki banan kerakmi? Eʼlon joylang — kerakli odam sizni topadi.</p>
+</section>
+<section id="promo" hidden>
+  <div class="banner" id="banner" aria-live="polite"></div>
+  <h2 class="rt">Yangi va arzon mahsulotlar</h2>
+  <div class="reels" id="reels"></div>
+</section>
+<div class="tabs" id="tabs"></div>
+<div class="tools"><input class="search" id="q" type="search" placeholder="Qidirish (masalan: banan)" aria-label="Qidirish"></div>
+<p class="note" id="st">Yuklanmoqda…</p>
+<main class="grid" id="grid"></main>
+
+<dialog id="dlg">
+  <h2>Yangi eʼlon</h2>
+  <label>Turi
+    <select id="f_type"><option value="sell">Sotaman</option><option value="want">Sotib olmoqchiman (kerak)</option></select></label>
+  <label>Nomi<input id="f_name" maxlength="60" placeholder="Masalan: Tufli, 42-oʻlcham"></label>
+  <label>Narx (soʻm)<input id="f_price" type="number" min="0" inputmode="numeric"></label>
+  <label>Tavsif<textarea id="f_desc" rows="2" maxlength="200"></textarea></label>
+  <label>Rasmlar (sotish uchun kamida 2 ta, koʻpi bilan 5 ta)</label>
+  <button type="button" class="chip" id="pick" style="width:100%;margin-top:6px">Rasm tanlash</button>
+  <input id="f_img" type="file" accept="image/*" multiple tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+  <div id="thumbs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+  <label>Aloqa (telefon yoki Telegram)<input id="f_contact" maxlength="40" placeholder="+998 90 123 45 67"></label>
+  <div class="acts"><button id="cancel" type="button">Bekor qilish</button><button class="go" id="save" type="button">Joylash</button></div>
+</dialog>
+<dialog id="adlg">
+  <h2>Kirish yoki roʻyxatdan oʻtish</h2>
+  <label>Email<input id="a_e" type="email" autocomplete="email"></label>
+  <label>Parol (kamida 6 belgi)<input id="a_p" type="password" autocomplete="current-password"></label>
+  <p id="a_m" style="color:var(--muted);font-size:.9rem;min-height:1.2em;margin:8px 0 0"></p>
+  <div class="acts"><button id="a_c" type="button">Yopish</button><button id="a_up" type="button">Roʻyxatdan oʻtish</button><button class="go" id="a_in" type="button">Kirish</button></div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+var SB_URL="https://nlgknzjdwlkmpvwnnijt.supabase.co";
+var SB_KEY="sb_publishable_hRJB9yq_W9wtckXSjWIcjw___lNlXe0";
+var sb=supabase.createClient(SB_URL,SB_KEY);
+var $=function(i){return document.getElementById(i)};
+var tab="sell",query="",items=[],bans=[],bi=0,user=null;
+var cols=["#1d3f9a","#0b7f86","#7a3fb0","#b5532a","#2f7d4f","#a8324e"];
+function toast(t){var e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove("show")},2200)}
+function fmt(n){return n?Number(n).toLocaleString("ru-RU")+" so\u02bbm":"Kelishilgan narx"}
+function url(p){return sb.storage.from("photos").getPublicUrl(p).data.publicUrl}
+function tabs(){
+  var t=$("tabs");t.innerHTML="";
+  [["sell","Sotuvda"],["want","Kerak (xaridor qidirmoqda)"]].forEach(function(x){
+    var b=document.createElement("button");b.className="chip";b.textContent=x[1];
+    b.setAttribute("aria-pressed",tab===x[0]);
+    b.onclick=function(){tab=x[0];tabs();draw()};t.appendChild(b);
+  });
+}
+function draw(){
+  var g=$("grid");g.innerHTML="";
+  var list=items.filter(function(x){return x.type===tab&&(x.name||"").toLowerCase().indexOf(query)>-1});
+  if(!list.length){g.innerHTML='<div class="empty">Hozircha e\u02bclon yo\u02bbq. Birinchi bo\u02bblib \u201c+ e\u02bclon berish\u201d tugmasini bosing.</div>';return}
+  list.forEach(function(x){
+    var d=document.createElement("article");d.className="card";
+    d.innerHTML='<div class="body"><span class="tag"></span><h3></h3><small></small><div class="row"><span class="price"></span><button class="add"></button></div><button class="del" hidden>O\u02bbchirish</button></div>';
+    if(x.imgs&&x.imgs.length){
+      var w=document.createElement("div");w.className="galw";
+      var gl=document.createElement("div");gl.className="gal";
+      x.imgs.forEach(function(p){var im=document.createElement("img");im.loading="lazy";im.alt=x.name||"";im.src=url(p);gl.appendChild(im)});
+      var ct=document.createElement("span");ct.className="cnt";ct.textContent="1/"+x.imgs.length;
+      gl.onscroll=function(){ct.textContent=(Math.round(gl.scrollLeft/gl.clientWidth)+1)+"/"+x.imgs.length};
+      w.appendChild(gl);w.appendChild(ct);d.insertBefore(w,d.firstChild);
+    }
+    var tg=d.querySelector(".tag");tg.textContent=x.type==="sell"?"Sotiladi":"Kerak";if(x.type==="want")tg.classList.add("want");
+    d.querySelector("h3").textContent=x.name;
+    d.querySelector("small").textContent=x.descr||"";
+    d.querySelector(".price").textContent=fmt(x.price);
+    var ab=d.querySelector(".add");ab.textContent=x.type==="sell"?"Bog\u02bblanish":"Men sotaman";
+    ab.onclick=function(){ab.textContent=x.contact;ab.onclick=null};
+    var dl=d.querySelector(".del");
+    if(user&&x.seller===user.id){dl.hidden=false;dl.onclick=function(){
+      if(!dl.dataset.s){dl.dataset.s=1;dl.textContent="Aniq o\u02bbchirilsinmi? Yana bosing";return}
+      sb.from("listings").delete().eq("id",x.id).then(function(r){if(r.error)toast("O\u02bbchirib bo\u02bblmadi");else load()});
+    }}
+    g.appendChild(d);
+  });
+}
+function showBan(){
+  var b=$("banner");
+  if(!bans.length){b.innerHTML="<b>Bozorcha</b><span>Bu yerda reklama banneri ko\u02bbrinadi.</span>";return}
+  var x=bans[bi%bans.length];b.innerHTML="<b></b><span></span>";
+  b.firstChild.textContent=x.title||"";b.lastChild.textContent=x.body||"";
+  b.firstChild.className=b.lastChild.className="in";
+  var br=document.createElement("i");br.className="bar";b.appendChild(br);
+}
+setInterval(function(){if(bans.length>1){bi++;showBan()}},5000);
+function reels(){
+  var p=$("promo");
+  if(!user){p.hidden=true;return}
+  p.hidden=false;
+  var sell=items.filter(function(x){return x.type==="sell"&&x.price>0});
+  var r=$("reels");r.innerHTML="";
+  if(!sell.length){r.innerHTML='<p style="color:var(--muted)">Yangi mahsulotlar e\u02bclon qilinishi bilan shu yerda chiqadi.</p>';return}
+  var pr=sell.map(function(x){return x.price}).sort(function(a,b){return a-b});
+  var med=pr[Math.floor(pr.length/2)];
+  sell.filter(function(x){return x.price<=med}).slice(0,10).forEach(function(x){
+    var c=document.createElement("button");c.className="reel";c.style.background=cols[(x.name||"").length%cols.length];
+    c.innerHTML='<div class="big">\ud83d\udecd\ufe0f</div><span class="new">Yangi</span><b></b><small></small>';
+    c.querySelector("b").textContent=x.name;var sm=c.querySelector("small");sm.textContent=fmt(x.price);
+    if(x.imgs&&x.imgs.length){
+      var k=0,n=x.imgs.length;c.classList.add("img");
+      var setI=function(){c.style.background="url("+url(x.imgs[k])+") center/cover";sm.textContent=fmt(x.price)+" \u00b7 "+(k+1)+"/"+n};
+      setI();c.onclick=function(){k=(k+1)%n;setI()};
+    }else{c.onclick=function(){sm.textContent=x.contact}}
+    r.appendChild(c);
+  });
+}
+function load(){
+  $("st").textContent="Yuklanmoqda\u2026";
+  sb.from("listings").select("*").order("created_at",{ascending:false}).then(function(r){
+    if(r.error){$("st").textContent="Ma\u02bclumotni o\u02bbqib bo\u02bblmadi.";return}
+    $("st").textContent="";items=r.data||[];draw();reels();
+  });
+}
+function loadBans(){
+  sb.from("banners").select("*").order("created_at",{ascending:false}).then(function(r){bans=r.data||[];bi=0;showBan()});
+}
+function setUser(u){
+  user=u;$("authbtn").textContent=u?"Chiqish":"Kirish";
+  draw();reels();
+}
+$("authbtn").onclick=function(){
+  if(user){sb.auth.signOut().then(function(){toast("Chiqdingiz")})}
+  else{$("a_m").textContent="";$("adlg").showModal()}
+};
+$("a_c").onclick=function(){$("adlg").close()};
+function authDo(up){
+  var e=$("a_e").value.trim(),p=$("a_p").value;
+  if(!e||p.length<6){$("a_m").textContent="Email va kamida 6 belgili parol kiriting.";return}
+  $("a_m").textContent="Kuting\u2026";
+  var f=up?sb.auth.signUp({email:e,password:p}):sb.auth.signInWithPassword({email:e,password:p});
+  f.then(function(r){
+    if(r.error){$("a_m").textContent="Xato: "+r.error.message;return}
+    if(up&&!r.data.session){$("a_m").textContent="Pochtangizga tasdiqlash xati yuborildi. Havolani bosing, keyin kiring.";return}
+    $("adlg").close();toast("Xush kelibsiz!");
+  });
+}
+$("a_in").onclick=function(){authDo(false)};
+$("a_up").onclick=function(){authDo(true)};
+$("q").oninput=function(e){query=e.target.value.toLowerCase().trim();draw()};
+$("new").onclick=function(){
+  if(!user){toast("Avval tizimga kiring");$("a_m").textContent="";$("adlg").showModal();return}
+  $("f_type").value=tab;$("dlg").showModal();
+};
+$("cancel").onclick=function(){$("dlg").close()};
+$("pick").onclick=function(){$("f_img").click()};
+$("f_img").onchange=function(){
+  var t=$("thumbs");t.innerHTML="";
+  Array.prototype.forEach.call($("f_img").files,function(f){var im=document.createElement("img");im.style.cssText="width:56px;height:56px;object-fit:cover;border-radius:8px";im.src=URL.createObjectURL(f);t.appendChild(im)});
+  $("pick").textContent=$("f_img").files.length?$("f_img").files.length+" ta rasm tanlandi":"Rasm tanlash";
+};
+function shrink(f){return createImageBitmap(f).then(function(b){var s=Math.min(1,900/Math.max(b.width,b.height));var c=document.createElement("canvas");c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext("2d").drawImage(b,0,0,c.width,c.height);return new Promise(function(r){c.toBlob(r,"image/jpeg",.82)})})}
+function upload(files){
+  return Promise.all(Array.prototype.map.call(files,function(f,i){
+    return shrink(f).then(function(bl){
+      var path=user.id+"/"+Date.now()+"_"+i+".jpg";
+      return sb.storage.from("photos").upload(path,bl,{contentType:"image/jpeg"}).then(function(r){if(r.error)throw r.error;return path});
+    });
+  }));
+}
+$("save").onclick=function(){
+  var files=$("f_img").files,type=$("f_type").value;
+  if(type==="sell"&&files.length<2){toast("Sifatini ko\u02bbrsatish uchun kamida 2 ta rasm tanlang");return}
+  if(files.length>5){toast("Ko\u02bbpi bilan 5 ta rasm");return}
+  var name=$("f_name").value.trim(),contact=$("f_contact").value.trim();
+  if(!name||!contact){toast("Nomi va aloqa maydonini to\u02bbldiring");return}
+  $("save").disabled=true;$("save").textContent="Joylanmoqda\u2026";
+  upload(files).then(function(paths){
+    return sb.from("listings").insert({type:type,name:name,price:Number($("f_price").value)||0,descr:$("f_desc").value.trim(),contact:contact,imgs:paths});
+  }).then(function(r){
+    if(r.error)throw r.error;
+    $("f_img").value="";$("thumbs").innerHTML="";$("pick").textContent="Rasm tanlash";
+    ["f_name","f_price","f_desc","f_contact"].forEach(function(i){$(i).value=""});
+    $("dlg").close();toast("E\u02bclon joylandi");load();
+  }).catch(function(e){toast("Joylab bo\u02bblmadi: "+(e.message||e))})
+  .then(function(){$("save").disabled=false;$("save").textContent="Joylash"});
+};
+tabs();showBan();draw();loadBans();
+sb.auth.getSession().then(function(r){setUser(r.data.session?r.data.session.user:null);load()});
+sb.auth.onAuthStateChange(function(ev,session){setUser(session?session.user:null)});
+</script>
+</body>
+</html>
