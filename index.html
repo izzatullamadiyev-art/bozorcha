@@ -108,6 +108,11 @@ label{display:block;font-size:.88rem;color:var(--muted);margin-top:12px}
 .acts .pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
 .link{border:0;background:none;color:var(--brand);text-decoration:underline;padding:6px}
 .sw{text-align:center;margin:8px 0 0}
+.pickrow{display:flex;gap:8px;margin-top:6px}.pickrow .btn{flex:1;padding:8px 10px;font-size:.92rem;border-radius:12px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.th{position:relative;width:60px;height:60px}.th img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.th button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--coral);color:#fff;font-size:.9rem;line-height:1;padding:0}
+button.pill{color:#fff;font:inherit;font-size:.9rem;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){.banner .in,.banner .bar{animation:none}.toast,.meter i{transition:none}}
@@ -198,9 +203,14 @@ label{display:block;font-size:.88rem;color:var(--muted);margin-top:12px}
   <label>Shahar<select id="f_city"></select></label>
   <label>Tavsif<textarea id="f_desc" rows="2" maxlength="200"></textarea></label>
   <label>Rasmlar (sotish uchun kamida 2 ta, koʻpi bilan 5 ta)</label>
-  <button type="button" class="btn" id="pick" style="width:100%;margin-top:6px">Rasm tanlash</button>
+  <div class="pickrow">
+    <button type="button" class="btn" id="pick_g">🖼️ Galereya</button>
+    <button type="button" class="btn" id="pick_c">📷 Kamera</button>
+  </div>
   <input id="f_img" type="file" accept="image/*" multiple tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
-  <div id="thumbs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+  <input id="f_cam" type="file" accept="image/*" capture="environment" tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+  <div id="thumbs" class="thumbs"></div>
+  <div class="hint" id="pcount">0/5 rasm · kamida 2 ta kerak</div>
   <label>Aloqa (telefon yoki Telegram)<input id="f_contact" maxlength="40" placeholder="+998 90 123 45 67"></label>
   <div class="acts"><button id="cancel" type="button">Bekor qilish</button><button class="pri" id="save" type="button">Joylash</button></div>
 </div></dialog>
@@ -319,10 +329,10 @@ function hero(){
   $("hh").textContent=user&&n?"Salom, "+n+"!":"Hamma sotadi, hamma sotib oladi";
   $("hp").textContent=user&&c?c+"dagi yangi eʼlonlar sizni kutmoqda. Sotmoqchimisiz yoki izlayapsizmi?":"Ortiqcha buyumingizni soting, kerakli narsani toping. Eʼlon joylang, qolganini odamlar qiladi.";
   var st=$("stats");st.innerHTML="";
-  function pill(t){var s=document.createElement("span");s.className="pill";s.textContent=t;st.appendChild(s)}
-  pill(items.filter(function(x){return x.type==="sell"}).length+" ta mahsulot");
-  pill(items.filter(function(x){return x.type==="want"}).length+" ta soʻrov");
-  if(c)pill("📍 "+c+": "+items.filter(function(x){return x.city===c}).length+" ta eʼlon");
+  function pill(t,fn){var s=document.createElement("button");s.type="button";s.className="pill";s.textContent=t;s.onclick=function(){fn();drawChips();draw();$("grid").scrollIntoView({behavior:"smooth",block:"start"})};st.appendChild(s)}
+  pill(items.filter(function(x){return x.type==="sell"}).length+" ta mahsulot",function(){tab="sell";cat="Hammasi";onlyCity=false});
+  pill(items.filter(function(x){return x.type==="want"}).length+" ta soʻrov",function(){tab="want";cat="Hammasi";onlyCity=false});
+  if(c)pill("📍 "+c+": "+items.filter(function(x){return x.city===c}).length+" ta eʼlon",function(){onlyCity=true});
   var pts=$("pts");
   if(user&&c){
     pts.hidden=false;$("ptt").textContent=c+"dagi yaqin doʻkonlar va punktlar";
@@ -445,12 +455,28 @@ $("new").onclick=function(){
 };
 $("cancel").onclick=function(){$("dlg").close()};
 $("p_x").onclick=function(){$("dlg").close()};
-$("pick").onclick=function(){$("f_img").click()};
-$("f_img").onchange=function(){
+var picked=[];
+function renderThumbs(){
   var t=$("thumbs");t.innerHTML="";
-  Array.prototype.forEach.call($("f_img").files,function(f){var im=document.createElement("img");im.style.cssText="width:56px;height:56px;object-fit:cover;border-radius:10px";im.src=URL.createObjectURL(f);t.appendChild(im)});
-  $("pick").textContent=$("f_img").files.length?$("f_img").files.length+" ta rasm tanlandi":"Rasm tanlash";
-};
+  picked.forEach(function(f,i){
+    var w=document.createElement("div");w.className="th";
+    var im=document.createElement("img");im.src=URL.createObjectURL(f);im.alt="Tanlangan rasm";
+    var x=document.createElement("button");x.type="button";x.textContent="×";x.setAttribute("aria-label","Rasmni olib tashlash");
+    x.onclick=function(){picked.splice(i,1);renderThumbs()};
+    w.appendChild(im);w.appendChild(x);t.appendChild(w);
+  });
+  var h=$("pcount");h.textContent=picked.length+"/5 rasm"+(picked.length<2?" · kamida 2 ta kerak":" ✓");
+}
+function addFiles(list){
+  Array.prototype.forEach.call(list,function(f){
+    if(picked.length<5)picked.push(f);else toast("Koʻpi bilan 5 ta rasm");
+  });
+  renderThumbs();
+}
+$("pick_g").onclick=function(){$("f_img").click()};
+$("pick_c").onclick=function(){$("f_cam").click()};
+$("f_img").onchange=function(){addFiles(this.files);this.value=""};
+$("f_cam").onchange=function(){addFiles(this.files);this.value=""};
 function shrink(f){return createImageBitmap(f).then(function(b){var s=Math.min(1,900/Math.max(b.width,b.height));var c=document.createElement("canvas");c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext("2d").drawImage(b,0,0,c.width,c.height);return new Promise(function(r){c.toBlob(r,"image/jpeg",.82)})})}
 function upload(files){
   return Promise.all(Array.prototype.map.call(files,function(f,i){
@@ -461,7 +487,7 @@ function upload(files){
   }));
 }
 $("save").onclick=function(){
-  var files=$("f_img").files,type=$("f_type").value;
+  var files=picked,type=$("f_type").value;
   if(type==="sell"&&files.length<2){toast("Sifatini koʻrsatish uchun kamida 2 ta rasm tanlang");return}
   if(files.length>5){toast("Koʻpi bilan 5 ta rasm");return}
   var name=$("f_name").value.trim(),contact=$("f_contact").value.trim();
@@ -471,7 +497,7 @@ $("save").onclick=function(){
     return sb.from("listings").insert({type:type,category:$("f_cat").value,city:$("f_city").value||null,name:name,price:Number($("f_price").value)||0,descr:$("f_desc").value.trim(),contact:contact,imgs:paths});
   }).then(function(r){
     if(r.error)throw r.error;
-    $("f_img").value="";$("thumbs").innerHTML="";$("pick").textContent="Rasm tanlash";
+    picked=[];renderThumbs();
     ["f_name","f_price","f_desc"].forEach(function(i){$(i).value=""});
     $("dlg").close();toast("Eʼlon joylandi");load();
   }).catch(function(e){
