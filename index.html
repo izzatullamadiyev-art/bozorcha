@@ -1,781 +1,500 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bozorcha — Hamma sotadi, hamma sotib oladi</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root {
-      --bg: #0b1120;
-      --surface: #131c31;
-      --surface-hover: #1a2642;
-      --border: #243252;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --danger: #ef4444;
-      --success: #10b981;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-
-    /* Rangli chiziq */
-    .top-stripe {
-      height: 5px;
-      background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b, #ef4444, #8b5cf6);
-    }
-
-    /* Header */
-    header {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      text-decoration: none;
-    }
-
-    .nav-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    /* Tugmalar */
-    .btn {
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.2s ease;
-    }
-
-    .btn-outline {
-      background: var(--surface);
-      border-color: var(--border);
-      color: var(--text);
-    }
-
-    .btn-outline:hover {
-      background: var(--surface-hover);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.15);
-      color: #fca5a5;
-      border-color: rgba(239, 68, 68, 0.3);
-    }
-
-    /* Hero & Main */
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 32px 20px 80px;
-    }
-
-    .hero h1 {
-      font-size: 2.3rem;
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 14px;
-      font-family: Georgia, serif;
-    }
-
-    .hero p {
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      margin-bottom: 24px;
-    }
-
-    /* Filter & Search */
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .tab {
-      padding: 10px 18px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      background: var(--text);
-      color: var(--bg);
-      border-color: var(--text);
-    }
-
-    .search-box {
-      width: 100%;
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 1rem;
-      margin-bottom: 28px;
-      outline: none;
-    }
-
-    .search-box:focus {
-      border-color: var(--primary);
-    }
-
-    /* E'lonlar ro'yxati */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      width: fit-content;
-    }
-
-    .badge-sell {
-      background: rgba(16, 185, 129, 0.15);
-      color: #6ee7b7;
-    }
-
-    .badge-buy {
-      background: rgba(59, 130, 246, 0.15);
-      color: #93c5fd;
-    }
-
-    .card h3 {
-      font-size: 1.15rem;
-    }
-
-    .card-price {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #38bdf8;
-    }
-
-    .card-meta {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--text-muted);
-      background: rgba(19, 28, 49, 0.4);
-      border-radius: 16px;
-      border: 1px dashed var(--border);
-    }
-
-    /* Modallar */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(2, 6, 23, 0.8);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 100;
-    }
-
-    .modal-backdrop[hidden] {
-      display: none;
-    }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 420px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-    }
-
-    .modal-header h2 {
-      font-size: 1.4rem;
-    }
-
-    .close-icon {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.98rem;
-      outline: none;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: #f59e0b;
-    }
-
-    .pwd-wrap {
-      position: relative;
-    }
-
-    .pwd-wrap input {
-      padding-right: 44px;
-    }
-
-    .eye-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      font-size: 1.15rem;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    .alert {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      margin-bottom: 14px;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
-    }
-
-    .alert.success {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: #6ee7b7;
-    }
-
-    .modal-footer {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .modal-footer .btn {
-      flex: 1;
-      padding: 12px;
-    }
-
-    .switch-mode {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 0.92rem;
-      color: var(--text-muted);
-    }
-
-    .switch-mode button {
-      background: none;
-      border: none;
-      color: #60a5fa;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: underline;
-      font-size: 0.92rem;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bozorcha — hamma sotadi, hamma sotib oladi</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --bg:#eef2fa;--surface:#fff;--ink:#0f1b3d;--muted:#5a6685;--line:#dbe2f0;
+  --brand:#14307a;--brand-ink:#fff;--teal:#0fb5ae;--sun:#ffb703;--coral:#ff6b5b;
+  --shadow:0 12px 30px -14px rgba(20,48,122,.35);color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b1226;--surface:#141d3a;--ink:#eef2ff;--muted:#9fabcc;--line:#25325c;
+  --brand:#8aa4ff;--brand-ink:#0b1226;--shadow:0 12px 30px -14px rgba(0,0,0,.7);color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.5;padding-bottom:env(safe-area-inset-bottom,0px)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{display:flex;align-items:center;gap:8px;font-family:Georgia,"Times New Roman",serif;font-size:1.45rem;font-weight:700;color:var(--brand)}
+.logo i{width:22px;height:22px;background:linear-gradient(135deg,var(--sun),var(--coral));transform:rotate(45deg);border-radius:5px;display:inline-block}
+.hr{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:999px}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.me{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px}
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--brand));color:#fff;display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(135deg,#14307a 0%,#1f46b4 55%,#0b8fa0 100%);padding:34px 16px 70px;border-radius:0 0 30px 30px}
+.hero::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 4l24 24-24 24L4 28z' fill='none' stroke='%23fff' stroke-opacity='.14' stroke-width='2'/%3E%3Cpath d='M28 16l12 12-12 12-12-12z' fill='%23ffb703' fill-opacity='.2'/%3E%3C/svg%3E");mask-image:linear-gradient(120deg,transparent 20%,#000 90%);-webkit-mask-image:linear-gradient(120deg,transparent 20%,#000 90%)}
+.hin{position:relative;max-width:960px;margin:0 auto}
+.hero h1{font-family:Georgia,serif;font-size:clamp(2.1rem,8vw,3.8rem);line-height:1.05;margin:0 0 12px;max-width:14ch}
+.hero p{margin:0 0 18px;max-width:46ch;opacity:.92}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 14px;font-size:.9rem}
+main{max-width:960px;margin:-42px auto 0;padding:0 16px 40px;position:relative}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
+.search{width:100%;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+select{padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+h2.t{font-family:Georgia,serif;font-size:1.35rem;margin:26px 0 10px}
+#promo{margin-top:18px}
+.banner{position:relative;overflow:hidden;border-radius:20px;padding:24px 22px;min-height:104px;color:#fff;background:linear-gradient(120deg,#ff6b5b,#ffb703);display:flex;flex-direction:column;justify-content:center;gap:4px;box-shadow:var(--shadow)}
+.banner b{font-family:Georgia,serif;font-size:1.5rem;color:#2b1500}
+.banner span{color:#3a1f00}
+.banner .in{animation:bin .6s ease}
+@keyframes bin{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+.banner .bar{position:absolute;left:0;bottom:0;height:4px;background:rgba(43,21,0,.55);animation:bar 5s linear forwards}
+@keyframes bar{from{width:0}to{width:100%}}
+.reels{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
+.reel{flex:0 0 158px;aspect-ratio:9/16;border-radius:20px;scroll-snap-align:start;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff;border:0;text-align:left}
+.reel .big{position:absolute;top:24%;left:0;right:0;text-align:center;font-size:3.2rem}
+.reel.img .big{display:none}
+.reel::after{content:"";position:absolute;inset:auto 0 0 0;height:62%;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.reel>*:not(.big){position:relative;z-index:1}
+.reel .new{align-self:flex-start;background:var(--sun);color:#3a2a00;border-radius:999px;padding:1px 9px;font-size:.72rem;margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.galw{position:relative}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gal img{flex:0 0 100%;width:100%;height:190px;object-fit:cover;scroll-snap-align:start;background:var(--line)}
+.noimg{height:110px;display:grid;place-items:center;font-size:2.6rem;background:linear-gradient(135deg,color-mix(in srgb,var(--teal) 30%,var(--surface)),color-mix(in srgb,var(--sun) 30%,var(--surface)))}
+.cnt{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.62);color:#fff;border-radius:999px;padding:1px 10px;font-size:.78rem}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;flex:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.74rem;padding:2px 9px;border-radius:999px;background:var(--sun);color:#3a2a00}
+.tag.want{background:var(--teal);color:#042b2a}
+.tag.m{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.body h3{margin:2px 0 0;font-size:1.05rem}
+.body small{color:var(--muted)}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;gap:8px}
+.price{font-weight:700;font-size:1.05rem}
+.go{border:0;background:var(--teal);color:#042b2a;font-weight:700;padding:9px 14px;border-radius:12px}
+.del{border:0;background:none;color:var(--muted);text-decoration:underline;text-align:left;padding:4px 0}
+.empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:36px 12px}
+.pts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.pt{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:12px 14px}
+.pt b{display:block}.pt small{color:var(--muted)}
+footer{text-align:center;color:var(--muted);padding:20px 16px 30px;font-size:.88rem}
+dialog{border:0;padding:0;background:transparent;color:var(--ink);width:min(440px,100vw);max-width:100vw;max-height:100dvh;overflow:visible}
+dialog::backdrop{background:rgba(6,12,32,.6);backdrop-filter:blur(3px)}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px;max-height:92dvh;overflow:auto;box-shadow:var(--shadow)}
+.sheet h2{font-family:Georgia,serif;margin:0;font-size:1.4rem}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.x{border:0;background:none;color:var(--ink);font-size:1.7rem;line-height:1}
+label{display:block;font-size:.88rem;color:var(--muted);margin-top:12px}
+.sheet input,.sheet select,.sheet textarea{width:100%;margin-top:4px;padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.pw{position:relative}
+.pw input{padding-right:48px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-35%);width:38px;height:38px;border:0;background:none;color:var(--muted);display:grid;place-items:center;border-radius:10px}
+.eye svg{width:22px;height:22px}
+.meter{height:6px;border-radius:99px;background:var(--line);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s,background .25s}
+.hint{font-size:.82rem;color:var(--muted);margin-top:4px;min-height:1.2em}
+.steps{display:flex;gap:6px;margin:6px 0 4px}
+.steps i{flex:1;height:5px;border-radius:99px;background:var(--line)}
+.steps i.on{background:var(--teal)}
+.msg{min-height:1.3em;margin:10px 0 0;font-size:.9rem;color:var(--coral)}
+.msg.ok{color:var(--teal)}
+.acts{display:flex;gap:8px;margin-top:14px}
+.acts button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.acts .pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.link{border:0;background:none;color:var(--brand);text-decoration:underline;padding:6px}
+.sw{text-align:center;margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){.banner .in,.banner .bar{animation:none}.toast,.meter i{transition:none}}
+</style>
 </head>
 <body>
+<header>
+  <div class="logo"><i></i>Bozorcha</div>
+  <div class="hr">
+    <button class="btn" id="authbtn">Kirish</button>
+    <button class="btn pri" id="new">+ Eʼlon</button>
+  </div>
+</header>
 
-  <div class="top-stripe"></div>
+<section class="hero">
+  <div class="hin">
+    <h1 id="hh">Hamma sotadi, hamma sotib oladi</h1>
+    <p id="hp">Ortiqcha buyumingizni soting, kerakli narsani toping. Eʼlon joylang, qolganini odamlar qiladi.</p>
+    <div class="stats" id="stats"></div>
+  </div>
+</section>
 
-  <header>
-    <a href="#" class="logo">Bozorcha</a>
-    <div class="nav-actions">
-      <button id="btn_auth" class="btn btn-outline">Kirish</button>
-      <button id="btn_logout" class="btn btn-danger" hidden>Chiqish</button>
-      <button id="btn_new_ad" class="btn btn-primary">+ e'lon berish</button>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <h1>Hamma sotadi,<br>hamma sotib oladi</h1>
-      <p>Tuflingiz ortiqchami yoki banan kerakmi? E'lon joylang — kerakli odam sizni topadi.</p>
-    </section>
-
-    <div class="tabs">
-      <button class="tab active" data-type="sell">Sotuvda</button>
-      <button class="tab" data-type="buy">Kerak (xaridor qidirmoqda)</button>
-    </div>
-
-    <input type="text" id="search_input" class="search-box" placeholder="Qidirish (masalan: banan)" />
-
-    <div id="ads_container">
-      <div class="empty-state">Hozircha e'lon yo'q. Birinchi bo'lib "+ e'lon berish" tugmasini bosing.</div>
-    </div>
-  </main>
-
-  <!-- KIRISH / RO'YXATDAN O'TISH MODALI -->
-  <div id="auth_modal" class="modal-backdrop" hidden>
-    <div class="modal">
-      <div class="modal-header">
-        <h2 id="auth_title">Kirish</h2>
-        <button type="button" class="close-icon" id="close_auth_x">&times;</button>
-      </div>
-
-      <div id="auth_msg" class="alert" hidden></div>
-
-      <form id="auth_form">
-        <div class="form-group">
-          <label for="a_email">Email</label>
-          <input id="a_email" type="email" required placeholder="email@gmail.com" autocomplete="email" />
-        </div>
-
-        <div class="form-group">
-          <label for="a_pass">Parol (kamida 6 belgi)</label>
-          <div class="pwd-wrap">
-            <input id="a_pass" type="password" required minlength="6" autocomplete="current-password" />
-            <button type="button" id="toggle_pass" class="eye-btn" aria-label="Parolni ko‘rsatish">👁️</button>
-          </div>
-        </div>
-
-        <!-- Faqat ro'yxatdan o'tishda ko'rinadigan maydonlar -->
-        <div class="form-group" id="group_cp" hidden>
-          <label for="a_cp">Parolni takrorlang</label>
-          <div class="pwd-wrap">
-            <input id="a_cp" type="password" minlength="6" autocomplete="new-password" />
-            <button type="button" id="toggle_cp" class="eye-btn" aria-label="Parolni ko‘rsatish">👁️</button>
-          </div>
-        </div>
-
-        <div class="form-group" id="group_city" hidden>
-          <label for="a_city">Shaharingiz</label>
-          <select id="a_city">
-            <option value="" disabled selected>Hududni tanlang...</option>
-            <option value="Toshkent shahri">Toshkent shahri</option>
-            <option value="Toshkent viloyati">Toshkent viloyati</option>
-            <option value="Andijon viloyati">Andijon viloyati</option>
-            <option value="Buxoro viloyati">Buxoro viloyati</option>
-            <option value="Farg‘ona viloyati">Farg‘ona viloyati</option>
-            <option value="Jizzax viloyati">Jizzax viloyati</option>
-            <option value="Xorazm viloyati">Xorazm viloyati</option>
-            <option value="Namangan viloyati">Namangan viloyati</option>
-            <option value="Navoiy viloyati">Navoiy viloyati</option>
-            <option value="Qashqadaryo viloyati">Qashqadaryo viloyati</option>
-            <option value="Qoraqalpog‘iston Respublikasi">Qoraqalpog‘iston Respublikasi</option>
-            <option value="Samarqand viloyati">Samarqand viloyati</option>
-            <option value="Sirdaryo viloyati">Sirdaryo viloyati</option>
-            <option value="Surxondaryo viloyati">Surxondaryo viloyati</option>
-          </select>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" id="btn_close_auth" class="btn btn-outline">Yopish</button>
-          <button type="submit" id="btn_submit_auth" class="btn btn-primary">Kirish</button>
-        </div>
-
-        <div class="switch-mode">
-          <span id="switch_text">Hisobingiz yo‘qmi?</span>
-          <button type="button" id="btn_switch_mode">Ro‘yxatdan o‘tish</button>
-        </div>
-      </form>
+<main>
+  <div class="panel">
+    <input class="search" id="q" type="search" placeholder="Nima qidiryapsiz? Masalan: banan, tufli" aria-label="Qidirish">
+    <div class="row"><div class="scroll" id="tabs"></div></div>
+    <div class="row"><div class="scroll" id="cats"></div></div>
+    <div class="row">
+      <button class="chip" id="mycity" aria-pressed="false">Faqat mening shahrim</button>
+      <select id="sort" aria-label="Saralash"><option value="new">Yangilari</option><option value="cheap">Arzonroq</option><option value="exp">Qimmatroq</option></select>
     </div>
   </div>
 
-  <!-- E'LON BERISH MODALI -->
-  <div id="ad_modal" class="modal-backdrop" hidden>
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Yangi e'lon berish</h2>
-        <button type="button" class="close-icon" id="close_ad_x">&times;</button>
-      </div>
+  <section id="promo" hidden>
+    <div class="banner" id="banner" aria-live="polite"></div>
+    <h2 class="t">Yangi va arzon mahsulotlar</h2>
+    <div class="reels" id="reels"></div>
+  </section>
 
-      <div id="ad_msg" class="alert" hidden></div>
+  <p id="st" style="color:var(--muted);margin:16px 2px 0"></p>
+  <div class="grid" id="grid"></div>
 
-      <form id="ad_form">
-        <div class="form-group">
-          <label for="ad_type">E'lon turi</label>
-          <select id="ad_type" required>
-            <option value="sell">Sotaman</option>
-            <option value="buy">Sotib olaman (kerak)</option>
-          </select>
-        </div>
+  <section id="pts" hidden>
+    <h2 class="t" id="ptt"></h2>
+    <div class="pts" id="ptl"></div>
+    <p style="color:var(--muted);font-size:.85rem">Bu namuna maʼlumot: haqiqiy doʻkon va punktlar keyinroq qoʻshiladi.</p>
+  </section>
+</main>
+<footer>Bozorcha · Oʻzbekiston boʻylab eʼlonlar bozori</footer>
 
-        <div class="form-group">
-          <label for="ad_title">Nomi</label>
-          <input id="ad_title" type="text" required placeholder="Masalan: Banan yoki Sport tufli" />
-        </div>
+<dialog id="adlg"><div class="sheet">
+  <div class="sh"><h2 id="a_t">Kirish</h2><button class="x" id="a_x" aria-label="Yopish">×</button></div>
+  <div class="steps" id="a_steps" hidden><i></i><i></i></div>
 
-        <div class="form-group">
-          <label for="ad_price">Narxi (so'm)</label>
-          <input id="ad_price" type="text" required placeholder="Masalan: 25 000 so'm" />
-        </div>
-
-        <div class="form-group">
-          <label for="ad_phone">Aloqa uchun telefon yoki Telegram</label>
-          <input id="ad_phone" type="text" required placeholder="+998 90 123 45 67" />
-        </div>
-
-        <div class="form-group">
-          <label for="ad_desc">Qo'shimcha ma'lumot</label>
-          <textarea id="ad_desc" rows="3" placeholder="Holati, yetkazib berish va h.k."></textarea>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" id="btn_close_ad" class="btn btn-outline">Bekor qilish</button>
-          <button type="submit" class="btn btn-primary">Joylashtirish</button>
-        </div>
-      </form>
-    </div>
+  <div id="v_in">
+    <label>Email<input id="l_e" type="email" autocomplete="email" inputmode="email"></label>
+    <label>Parol<div class="pw"><input id="l_p" type="password" autocomplete="current-password"><button type="button" class="eye" data-for="l_p" aria-label="Parolni koʻrsatish"></button></div></label>
   </div>
 
-  <script>
-    // 1. SUPABASE SOZLAMALARI
-    const SUPABASE_URL = "https://nlgknzjdwlkmpvwnnijt.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_hRJB9yq_W9wtckXSjWIcjw___lNlXe0";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <div id="v_s1" hidden>
+    <label>Email<input id="s_e" type="email" autocomplete="email" inputmode="email"></label>
+    <label>Parol<div class="pw"><input id="s_p" type="password" autocomplete="new-password"><button type="button" class="eye" data-for="s_p" aria-label="Parolni koʻrsatish"></button></div></label>
+    <div class="meter"><i id="s_m"></i></div>
+    <div class="hint" id="s_h">Kamida 8 belgi: harf va raqam bilan</div>
+    <label>Parolni qayta kiriting<div class="pw"><input id="s_p2" type="password" autocomplete="new-password"><button type="button" class="eye" data-for="s_p2" aria-label="Parolni koʻrsatish"></button></div></label>
+    <div class="hint" id="s_h2"></div>
+  </div>
 
-    const $ = (id) => document.getElementById(id);
+  <div id="v_s2" hidden>
+    <label>Ismingiz<input id="s_n" maxlength="40" autocomplete="given-name"></label>
+    <label>Tugʻilgan sana<input id="s_b" type="date"></label>
+    <label>Qaysi shaharda yashaysiz?<select id="s_c"></select></label>
+    <label>Telefon (ixtiyoriy)<input id="s_t" type="tel" inputmode="tel" placeholder="+998 90 123 45 67" autocomplete="tel"></label>
+    <div class="hint">Shaharingizga qarab sizga yaqin eʼlon va punktlarni koʻrsatamiz.</div>
+  </div>
 
-    let currentUser = null;
-    let isRegisterMode = false;
-    let pendingAdOpen = false;
-    let currentTab = "sell";
-    let allAds = [];
+  <p class="msg" id="a_m"></p>
+  <div class="acts" id="a_acts"></div>
+  <p class="sw"><button class="link" id="a_sw"></button></p>
+</div></dialog>
 
-    // 2. FOYDALANUVCHI HOLATINI TEKSHIRISH
-    async function checkUser() {
-      const { data: { session } } = await sb.auth.getSession();
-      currentUser = session ? session.user : null;
-      updateHeaderUI();
-    }
+<dialog id="dlg"><div class="sheet">
+  <div class="sh"><h2>Yangi eʼlon</h2><button class="x" id="p_x" aria-label="Yopish">×</button></div>
+  <label>Turi<select id="f_type"><option value="sell">Sotaman</option><option value="want">Sotib olmoqchiman (kerak)</option></select></label>
+  <label>Kategoriya<select id="f_cat"></select></label>
+  <label>Nomi<input id="f_name" maxlength="60" placeholder="Masalan: Tufli, 42-oʻlcham"></label>
+  <label>Narx (soʻm)<input id="f_price" type="number" min="0" inputmode="numeric"></label>
+  <label>Shahar<select id="f_city"></select></label>
+  <label>Tavsif<textarea id="f_desc" rows="2" maxlength="200"></textarea></label>
+  <label>Rasmlar (sotish uchun kamida 2 ta, koʻpi bilan 5 ta)</label>
+  <button type="button" class="btn" id="pick" style="width:100%;margin-top:6px">Rasm tanlash</button>
+  <input id="f_img" type="file" accept="image/*" multiple tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+  <div id="thumbs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+  <label>Aloqa (telefon yoki Telegram)<input id="f_contact" maxlength="40" placeholder="+998 90 123 45 67"></label>
+  <div class="acts"><button id="cancel" type="button">Bekor qilish</button><button class="pri" id="save" type="button">Joylash</button></div>
+</div></dialog>
+<div class="toast" id="toast"></div>
 
-    function updateHeaderUI() {
-      if (currentUser) {
-        $("btn_auth").hidden = true;
-        $("btn_logout").hidden = false;
-      } else {
-        $("btn_auth").hidden = false;
-        $("btn_logout").hidden = true;
-      }
-    }
+<script>
+var SB_URL="https://nlgknzjdwlkmpvwnnijt.supabase.co";
+var SB_KEY="sb_publishable_hRJB9yq_W9wtckXSjWIcjw___lNlXe0";
+var sb=null;try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+var $=function(i){return document.getElementById(i)};
+var CITIES=["Toshkent","Samarqand","Buxoro","Andijon","Namangan","Fargʻona","Qoʻqon","Margʻilon","Nukus","Qarshi","Termiz","Navoiy","Jizzax","Guliston","Urganch","Xiva"];
+var CATS=["Kiyim-kechak","Elektronika","Oziq-ovqat","Uy-roʻzgʻor","Hunarmandchilik","Transport","Boshqa"];
+var POINTS={Toshkent:["Chilonzor","Yunusobod","Mirzo Ulugʻbek"],Samarqand:["Registon yaqini","Siyob bozori yaqini"],Buxoro:["Lyabi-Hovuz yaqini","Markaziy bozor yaqini"],Andijon:["Markaziy bozor yaqini","Shahar markazi"],Namangan:["Chorsu yaqini","Shahar markazi"],"Fargʻona":["Markaziy bozor yaqini","Shahar markazi"]};
+var tab="sell",cat="Hammasi",query="",onlyCity=false,items=[],bans=[],bi=0,user=null,view="in";
+var colsR=["#14307a","#0b7f86","#7a3fb0","#b5532a","#2f7d4f","#a8324e"];
+var ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+var ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 5.1-5.9M9.9 4.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2M1 1l22 22"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></svg>';
 
-    // 3. PAROL KO'ZCHALARI (1-chi va 2-chi maydon uchun)
-    function setupEyeToggle(btnId, inputId) {
-      $(btnId).onclick = function () {
-        const inp = $(inputId);
-        const isPwd = inp.type === "password";
-        inp.type = isPwd ? "text" : "password";
-        $(btnId).textContent = isPwd ? "🙈" : "👁️";
-      };
-    }
-    setupEyeToggle("toggle_pass", "a_pass");
-    setupEyeToggle("toggle_cp", "a_cp");
+function toast(t){var e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove("show")},2600)}
+function fmt(n){return n?Number(n).toLocaleString("ru-RU")+" soʻm":"Kelishilgan narx"}
+function url(p){return sb.storage.from("photos").getPublicUrl(p).data.publicUrl}
+function ago(d){var s=(Date.now()-new Date(d))/1000;if(s<60)return"hozirgina";if(s<3600)return Math.floor(s/60)+" daqiqa oldin";if(s<86400)return Math.floor(s/3600)+" soat oldin";return Math.floor(s/86400)+" kun oldin"}
+function meta(){return(user&&user.user_metadata)||{}}
+function myCity(){return meta().city||""}
+function fill(sel,arr,first){sel.innerHTML="";if(first){var o=document.createElement("option");o.value="";o.textContent=first;sel.appendChild(o)}arr.forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o)})}
+function chips(box,arr,cur,fn){box.innerHTML="";arr.forEach(function(x){var b=document.createElement("button");b.className="chip";b.textContent=x[1];b.setAttribute("aria-pressed",cur===x[0]);b.onclick=function(){fn(x[0])};box.appendChild(b)})}
+function drawChips(){
+  chips($("tabs"),[["sell","Sotuvda"],["want","Kerak (xaridor qidirmoqda)"]],tab,function(v){tab=v;drawChips();draw()});
+  chips($("cats"),[["Hammasi","Hammasi"]].concat(CATS.map(function(c){return[c,c]})),cat,function(v){cat=v;drawChips();draw()});
+  $("mycity").setAttribute("aria-pressed",onlyCity);
+}
 
-    // 4. KIRISH / RO'YXATDAN O'TISH MODALI BOSHQARUVI
-    function setAuthMode(register) {
-      isRegisterMode = register;
-      $("auth_msg").hidden = true;
-      $("auth_title").textContent = register ? "Ro‘yxatdan o‘tish" : "Kirish";
-      $("btn_submit_auth").textContent = register ? "Ro‘yxatdan o‘tish" : "Kirish";
-      $("group_cp").hidden = !register;
-      $("group_city").hidden = !register;
-      $("a_cp").required = register;
-      $("a_city").required = register;
-      $("a_pass").autocomplete = register ? "new-password" : "current-password";
-
-      $("switch_text").textContent = register ? "Allaqachon hisobingiz bormi?" : "Hisobingiz yo‘qmi?";
-      $("btn_switch_mode").textContent = register ? "Kirish" : "Ro‘yxatdan o‘tish";
-    }
-
-    function openAuthModal(register = false) {
-      $("auth_form").reset();
-      $("a_pass").type = "password";
-      $("a_cp").type = "password";
-      $("toggle_pass").textContent = "👁️";
-      $("toggle_cp").textContent = "👁️";
-      setAuthMode(register);
-      $("auth_modal").hidden = false;
-    }
-
-    function closeAuthModal() {
-      $("auth_modal").hidden = true;
-      pendingAdOpen = false;
-    }
-
-    function showAuthMsg(text, isSuccess = false) {
-      const el = $("auth_msg");
-      el.textContent = text;
-      el.className = isSuccess ? "alert success" : "alert";
-      el.hidden = false;
-    }
-
-    $("btn_auth").onclick = () => {
-      pendingAdOpen = false;
-      openAuthModal(false);
-    };
-    $("btn_close_auth").onclick = closeAuthModal;
-    $("close_auth_x").onclick = closeAuthModal;
-    $("btn_switch_mode").onclick = () => setAuthMode(!isRegisterMode);
-
-    // Kirish yoki Ro'yxatdan o'tish yuborilganda
-    $("auth_form").onsubmit = async (e) => {
-      e.preventDefault();
-      $("auth_msg").hidden = true;
-
-      const email = $("a_email").value.trim();
-      const password = $("a_pass").value;
-
-      if (isRegisterMode) {
-        const confirmPass = $("a_cp").value;
-        const city = $("a_city").value;
-
-        if (password !== confirmPass) {
-          showAuthMsg("Parollar bir-biriga mos kelmadi!");
-          return;
-        }
-        if (!city) {
-          showAuthMsg("Iltimos, shahar yoki viloyatingizni tanlang!");
-          return;
-        }
-
-        const { data, error } = await sb.auth.signUp({
-          email,
-          password,
-          options: { data: { city: city } }
-        });
-
-        if (error) {
-          showAuthMsg("Xatolik: " + error.message);
-          return;
-        }
-
-        currentUser = data.user;
-        updateHeaderUI();
-        const shouldOpenAd = pendingAdOpen;
-        closeAuthModal();
-        if (shouldOpenAd) openAdModal();
-
-      } else {
-        // KIRISH QISMI
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-        if (error) {
-          showAuthMsg("Kirilmadi, ro‘yxatdan o‘ting");
-          return;
-        }
-
-        currentUser = data.user;
-        updateHeaderUI();
-        const shouldOpenAd = pendingAdOpen;
-        closeAuthModal();
-        if (shouldOpenAd) openAdModal();
-      }
-    };
-
-    // Chiqish
-    $("btn_logout").onclick = async () => {
-      await sb.auth.signOut();
-      currentUser = null;
-      updateHeaderUI();
-    };
-
-    // 5. E'LON BERISH MODALI VA TEKSHIRUVI
-    function openAdModal() {
-      $("ad_form").reset();
-      $("ad_msg").hidden = true;
-      $("ad_modal").hidden = false;
-    }
-
-    function closeAdModal() {
-      $("ad_modal").hidden = true;
-    }
-
-    $("btn_new_ad").onclick = () => {
-      if (!currentUser) {
-        pendingAdOpen = true;
-        openAuthModal(false);
-        showAuthMsg("E'lon berish uchun avval tizimga kiring yoki ro‘yxatdan o‘ting.");
-      } else {
-        openAdModal();
-      }
-    };
-
-    $("btn_close_ad").onclick = closeAdModal;
-    $("close_ad_x").onclick = closeAdModal;
-
-    $("ad_form").onsubmit = async (e) => {
-      e.preventDefault();
-      if (!currentUser) return;
-
-      const newAd = {
-        user_id: currentUser.id,
-        city: currentUser.user_metadata?.city || "O'zbekiston",
-        type: $("ad_type").value,
-        title: $("ad_title").value.trim(),
-        price: $("ad_price").value.trim(),
-        phone: $("ad_phone").value.trim(),
-        description: $("ad_desc").value.trim()
-      };
-
-      const { error } = await sb.from("ads").insert([newAd]);
-      if (error) {
-        $("ad_msg").textContent = "Saqlashda xatolik: " + error.message;
-        $("ad_msg").hidden = false;
-        return;
-      }
-
-      closeAdModal();
-      loadAds();
-    };
-
-    // 6. E'LONLARNI YUKLASH VA QIDIRUV
-    async function loadAds() {
-      const { data, error } = await sb
-        .from("ads")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        $("ads_container").innerHTML = `<div class="empty-state">Ma'lumotni o'qib bo'lmadi.</div>`;
-        return;
-      }
-
-      allAds = data || [];
-      renderAds();
-    }
-
-    function renderAds() {
-      const q = $("search_input").value.toLowerCase().trim();
-      const filtered = allAds.filter(ad =>
-        ad.type === currentTab &&
-        (ad.title.toLowerCase().includes(q) || (ad.description && ad.description.toLowerCase().includes(q)))
-      );
-
-      if (filtered.length === 0) {
-        $("ads_container").innerHTML = `<div class="empty-state">Hozircha e'lon yo'q. Birinchi bo'lib "+ e'lon berish" tugmasini bosing.</div>`;
-        return;
-      }
-
-      $("ads_container").innerHTML = `<div class="grid">` + filtered.map(ad => `
-        <div class="card">
-          <div>
-            <span class="badge ${ad.type === 'sell' ? 'badge-sell' : 'badge-buy'}">
-              ${ad.type === 'sell' ? 'Sotiladi' : 'Kerak'}
-            </span>
-            <h3 style="margin-top:8px">${escapeHtml(ad.title)}</h3>
-            <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px">${escapeHtml(ad.description || "")}</p>
-          </div>
-          <div>
-            <div class="card-price">${escapeHtml(ad.price)}</div>
-            <div class="card-meta">
-              <span>📍 ${escapeHtml(ad.city || "O'zbekiston")}</span>
-              <span>📞 ${escapeHtml(ad.phone)}</span>
-            </div>
-          </div>
-        </div>
-      `).join("") + `</div>`;
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    }
-
-    document.querySelectorAll(".tab").forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        btn.classList.add("active");
-        currentTab = btn.dataset.type;
-        renderAds();
-      };
+/* ---------- eʼlonlar ---------- */
+function visible(){
+  var c=myCity(),s=$("sort").value;
+  var l=items.filter(function(x){
+    return x.type===tab&&(cat==="Hammasi"||x.category===cat)&&(!onlyCity||!c||x.city===c)&&((x.name||"")+" "+(x.descr||"")).toLowerCase().indexOf(query)>-1;
+  });
+  l.sort(function(a,b){
+    if(s==="cheap")return (a.price||1e15)-(b.price||1e15);
+    if(s==="exp")return (b.price||0)-(a.price||0);
+    if(c){var A=a.city===c?0:1,B=b.city===c?0:1;if(A!==B)return A-B}
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  return l;
+}
+function draw(){
+  var g=$("grid");g.innerHTML="";var list=visible();
+  if(!list.length){g.innerHTML='<div class="empty">Hozircha eʼlon yoʻq. Birinchi boʻlib “+ Eʼlon” tugmasini bosing.</div>';return}
+  var c=myCity();
+  list.forEach(function(x){
+    var d=document.createElement("article");d.className="card";
+    d.innerHTML='<div class="body"><div class="tags"></div><h3></h3><small class="ds"></small><div class="foot"><span class="price"></span><button class="go"></button></div><button class="del" hidden>Oʻchirish</button></div>';
+    var top;
+    if(x.imgs&&x.imgs.length){
+      top=document.createElement("div");top.className="galw";
+      var gl=document.createElement("div");gl.className="gal";
+      x.imgs.forEach(function(p){var im=document.createElement("img");im.loading="lazy";im.alt=x.name||"";im.src=url(p);gl.appendChild(im)});
+      var ct=document.createElement("span");ct.className="cnt";ct.textContent="1/"+x.imgs.length;
+      gl.onscroll=function(){ct.textContent=(Math.round(gl.scrollLeft/gl.clientWidth)+1)+"/"+x.imgs.length};
+      top.appendChild(gl);top.appendChild(ct);
+    }else{top=document.createElement("div");top.className="noimg";top.textContent=x.type==="want"?"🔎":"🛍️"}
+    d.insertBefore(top,d.firstChild);
+    var tg=d.querySelector(".tags");
+    function tag(t,cl){var s=document.createElement("span");s.className="tag "+(cl||"");s.textContent=t;tg.appendChild(s)}
+    tag(x.type==="sell"?"Sotiladi":"Kerak",x.type==="want"?"want":"");
+    if(x.category)tag(x.category,"m");
+    if(x.city)tag((c&&x.city===c?"📍 ":"")+x.city,"m");
+    d.querySelector("h3").textContent=x.name;
+    d.querySelector(".ds").textContent=(x.descr?x.descr+" · ":"")+ago(x.created_at);
+    d.querySelector(".price").textContent=fmt(x.price);
+    var ab=d.querySelector(".go");ab.textContent=x.type==="sell"?"Bogʻlanish":"Men sotaman";
+    ab.onclick=function(){ab.textContent=x.contact;ab.onclick=null};
+    var dl=d.querySelector(".del");
+    if(user&&x.seller===user.id){dl.hidden=false;dl.onclick=function(){
+      if(!dl.dataset.s){dl.dataset.s=1;dl.textContent="Aniq oʻchirilsinmi? Yana bosing";return}
+      sb.from("listings").delete().eq("id",x.id).then(function(r){if(r.error)toast("Oʻchirib boʻlmadi");else load()});
+    }}
+    g.appendChild(d);
+  });
+}
+function showBan(){
+  var b=$("banner");
+  if(!bans.length){b.innerHTML="<b>Bozorcha</b><span>Bu yerda reklama banneri koʻrinadi.</span>";return}
+  var x=bans[bi%bans.length];b.innerHTML="<b></b><span></span>";
+  b.firstChild.textContent=x.title||"";b.lastChild.textContent=x.body||"";
+  b.firstChild.className=b.lastChild.className="in";
+  var br=document.createElement("i");br.className="bar";b.appendChild(br);
+}
+setInterval(function(){if(bans.length>1){bi++;showBan()}},5000);
+function reels(){
+  var p=$("promo");
+  if(!user){p.hidden=true;return}
+  p.hidden=false;
+  var sell=items.filter(function(x){return x.type==="sell"&&x.price>0});
+  var r=$("reels");r.innerHTML="";
+  if(!sell.length){r.innerHTML='<p style="color:var(--muted)">Yangi mahsulotlar eʼlon qilinishi bilan shu yerda chiqadi.</p>';return}
+  var pr=sell.map(function(x){return x.price}).sort(function(a,b){return a-b});
+  var med=pr[Math.floor(pr.length/2)],c=myCity();
+  var l=sell.filter(function(x){return x.price<=med});
+  l.sort(function(a,b){var A=c&&a.city===c?0:1,B=c&&b.city===c?0:1;return A-B});
+  l.slice(0,10).forEach(function(x){
+    var e=document.createElement("button");e.className="reel";e.style.background=colsR[(x.name||"").length%colsR.length];
+    e.innerHTML='<div class="big">🛍️</div><span class="new">Yangi</span><b></b><small></small>';
+    e.querySelector("b").textContent=x.name;var sm=e.querySelector("small");sm.textContent=fmt(x.price);
+    if(x.imgs&&x.imgs.length){
+      var k=0,n=x.imgs.length;e.classList.add("img");
+      var setI=function(){e.style.background="url("+url(x.imgs[k])+") center/cover";sm.textContent=fmt(x.price)+" · "+(k+1)+"/"+n};
+      setI();e.onclick=function(){k=(k+1)%n;setI()};
+    }else{e.onclick=function(){sm.textContent=x.contact}}
+    r.appendChild(e);
+  });
+}
+function hero(){
+  var m=meta(),n=(m.full_name||"").split(" ")[0],c=myCity();
+  $("hh").textContent=user&&n?"Salom, "+n+"!":"Hamma sotadi, hamma sotib oladi";
+  $("hp").textContent=user&&c?c+"dagi yangi eʼlonlar sizni kutmoqda. Sotmoqchimisiz yoki izlayapsizmi?":"Ortiqcha buyumingizni soting, kerakli narsani toping. Eʼlon joylang, qolganini odamlar qiladi.";
+  var st=$("stats");st.innerHTML="";
+  function pill(t){var s=document.createElement("span");s.className="pill";s.textContent=t;st.appendChild(s)}
+  pill(items.filter(function(x){return x.type==="sell"}).length+" ta mahsulot");
+  pill(items.filter(function(x){return x.type==="want"}).length+" ta soʻrov");
+  if(c)pill("📍 "+c+": "+items.filter(function(x){return x.city===c}).length+" ta eʼlon");
+  var pts=$("pts");
+  if(user&&c){
+    pts.hidden=false;$("ptt").textContent=c+"dagi yaqin doʻkonlar va punktlar";
+    var l=$("ptl");l.innerHTML="";
+    (POINTS[c]||["Markaziy topshirish punkti","Bozor yaqinidagi punkt"]).forEach(function(p){
+      var d=document.createElement("div");d.className="pt";d.innerHTML="<b></b><small></small>";
+      d.querySelector("b").textContent="Bozorcha punkti: "+p;d.querySelector("small").textContent=c+" · uchrashuv va topshirish uchun";l.appendChild(d);
     });
+  }else pts.hidden=true;
+}
+function load(){
+  if(!sb){$("st").textContent="Kutubxona yuklanmadi. Internetni tekshirib, sahifani yangilang.";return}
+  $("st").textContent="Yuklanmoqda…";
+  sb.from("listings").select("*").order("created_at",{ascending:false}).then(function(r){
+    if(r.error){$("st").textContent="Maʼlumotni oʻqib boʻlmadi.";return}
+    $("st").textContent="";items=r.data||[];draw();reels();hero();
+  });
+}
+function loadBans(){if(!sb)return;sb.from("banners").select("*").order("created_at",{ascending:false}).then(function(r){bans=r.data||[];bi=0;showBan()})}
+function setUser(u){
+  user=u;var b=$("authbtn");b.innerHTML="";
+  if(u){
+    var n=(meta().full_name||u.email||"?");
+    b.className="btn me";var a=document.createElement("span");a.className="av";a.textContent=n.charAt(0).toUpperCase();
+    var t=document.createElement("span");t.textContent="Chiqish";b.appendChild(a);b.appendChild(t);
+  }else{b.className="btn";b.textContent="Kirish"}
+  draw();reels();hero();
+}
 
-    $("search_input").oninput = renderAds;
+/* ---------- kirish / roʻyxatdan oʻtish ---------- */
+function eyes(){document.querySelectorAll(".eye").forEach(function(b){b.innerHTML=ICON_ON;b.onclick=function(){
+  var i=$(b.dataset.for),show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?ICON_OFF:ICON_ON;
+  b.setAttribute("aria-label",show?"Parolni yashirish":"Parolni koʻrsatish");
+}})}
+function strength(p){
+  var s=0;if(p.length>=8)s++;if(p.length>=12)s++;if(/[A-Za-z]/.test(p)&&/\d/.test(p))s++;if(/[A-Z]/.test(p)&&/[a-z]/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;
+  return s;
+}
+function meter(){
+  var p=$("s_p").value,s=strength(p),m=$("s_m");
+  m.style.width=(p?Math.max(12,s*20):0)+"%";
+  m.style.background=s<=1?"#ff6b5b":s<=3?"#ffb703":"#0fb5ae";
+  $("s_h").textContent=!p?"Kamida 8 belgi: harf va raqam bilan":s<=1?"Zaif parol":s<=3?"Oʻrtacha parol":"Kuchli parol";
+  match();
+}
+function match(){
+  var a=$("s_p").value,b=$("s_p2").value,h=$("s_h2");
+  if(!b){h.textContent="";return}
+  h.textContent=a===b?"✓ Parollar mos":"Parollar mos emas";h.style.color=a===b?"var(--teal)":"var(--coral)";
+}
+function msg(t,ok){var m=$("a_m");m.textContent=t||"";m.className="msg"+(ok?" ok":"")}
+function authView(v){
+  view=v;msg("");
+  $("v_in").hidden=v!=="in";$("v_s1").hidden=v!=="s1";$("v_s2").hidden=v!=="s2";
+  var st=$("a_steps");st.hidden=v==="in";
+  st.children[0].className="on";st.children[1].className=v==="s2"?"on":"";
+  $("a_t").textContent=v==="in"?"Kirish":v==="s1"?"Roʻyxatdan oʻtish: 1/2":"Oʻzingiz haqingizda: 2/2";
+  var ac=$("a_acts");ac.innerHTML="";
+  function btn(t,fn,pri){var b=document.createElement("button");b.type="button";b.textContent=t;if(pri)b.className="pri";b.onclick=fn;ac.appendChild(b)}
+  if(v==="in")btn("Kirish",doLogin,true);
+  if(v==="s1")btn("Davom etish",toStep2,true);
+  if(v==="s2"){btn("Orqaga",function(){authView("s1")});btn("Tayyor",doSignup,true)}
+  $("a_sw").textContent=v==="in"?"Hisobingiz yoʻqmi? Roʻyxatdan oʻting":"Hisobingiz bormi? Kiring";
+  $("a_sw").hidden=v==="s2";
+}
+function errText(e){
+  var m=(e&&e.message)||"";
+  if(/Invalid login/i.test(m))return"Email yoki parol notoʻgʻri.";
+  if(/not confirmed/i.test(m))return"Pochtangiz tasdiqlanmagan. Xatdagi havolani bosing.";
+  if(/already registered/i.test(m))return"Bu email bilan roʻyxatdan oʻtilgan. Kiring.";
+  if(/rate limit|too many/i.test(m))return"Juda koʻp urinish. Birozdan keyin qayta urining.";
+  if(/password/i.test(m))return"Parol talabga mos emas: "+m;
+  return"Xato: "+m;
+}
+function doLogin(){
+  if(!sb){msg("Kutubxona yuklanmadi, sahifani yangilang.");return}
+  var e=$("l_e").value.trim(),p=$("l_p").value;
+  if(!e||!p){msg("Email va parolni kiriting.");return}
+  msg("Kuting…",true);
+  sb.auth.signInWithPassword({email:e,password:p}).then(function(r){
+    if(r.error){msg(errText(r.error));return}
+    $("adlg").close();toast("Xush kelibsiz!");
+  });
+}
+function toStep2(){
+  var e=$("s_e").value.trim(),p=$("s_p").value,p2=$("s_p2").value;
+  if(!/^\S+@\S+\.\S+$/.test(e)){msg("Toʻgʻri email kiriting.");return}
+  if(p.length<8||!/[A-Za-z]/.test(p)||!/\d/.test(p)){msg("Parol kamida 8 belgi, harf va raqam boʻlsin.");return}
+  if(p!==p2){msg("Parollar bir xil emas. Koʻz belgisini bosib tekshiring.");return}
+  authView("s2");
+}
+function doSignup(){
+  var n=$("s_n").value.trim(),b=$("s_b").value,c=$("s_c").value,t=$("s_t").value.trim();
+  if(n.length<2){msg("Ismingizni yozing.");return}
+  if(!b){msg("Tugʻilgan sanani kiriting.");return}
+  var age=(Date.now()-new Date(b))/31557600000;
+  if(age<14||age>110){msg("Sana notoʻgʻri yoki yosh 14 dan kichik.");return}
+  if(!c){msg("Shaharingizni tanlang.");return}
+  if(!sb){msg("Kutubxona yuklanmadi, sahifani yangilang.");return}
+  msg("Kuting…",true);
+  sb.auth.signUp({email:$("s_e").value.trim(),password:$("s_p").value,options:{data:{full_name:n,birth:b,city:c,phone:t}}}).then(function(r){
+    if(r.error){msg(errText(r.error));return}
+    if(!r.data.session){msg("Pochtangizga tasdiqlash xati yuborildi. Havolani bosib, keyin kiring.",true);return}
+    $("adlg").close();toast("Roʻyxatdan oʻtdingiz. Xush kelibsiz!");
+  });
+}
+function openAuth(v){authView(v||"in");$("adlg").showModal()}
+$("authbtn").onclick=function(){
+  if(user){sb.auth.signOut().then(function(){toast("Chiqdingiz")})}else openAuth("in");
+};
+$("a_x").onclick=function(){$("adlg").close()};
+$("a_sw").onclick=function(){authView(view==="in"?"s1":"in")};
+$("s_p").oninput=meter;$("s_p2").oninput=match;
 
-    // Ishga tushirish
-    checkUser();
-    loadAds();
-  </script>
+/* ---------- eʼlon joylash ---------- */
+$("new").onclick=function(){
+  if(!user){toast("Avval tizimga kiring");openAuth("in");return}
+  $("f_type").value=tab;$("f_city").value=myCity()||"";if(!$("f_contact").value)$("f_contact").value=meta().phone||"";
+  $("dlg").showModal();
+};
+$("cancel").onclick=function(){$("dlg").close()};
+$("p_x").onclick=function(){$("dlg").close()};
+$("pick").onclick=function(){$("f_img").click()};
+$("f_img").onchange=function(){
+  var t=$("thumbs");t.innerHTML="";
+  Array.prototype.forEach.call($("f_img").files,function(f){var im=document.createElement("img");im.style.cssText="width:56px;height:56px;object-fit:cover;border-radius:10px";im.src=URL.createObjectURL(f);t.appendChild(im)});
+  $("pick").textContent=$("f_img").files.length?$("f_img").files.length+" ta rasm tanlandi":"Rasm tanlash";
+};
+function shrink(f){return createImageBitmap(f).then(function(b){var s=Math.min(1,900/Math.max(b.width,b.height));var c=document.createElement("canvas");c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext("2d").drawImage(b,0,0,c.width,c.height);return new Promise(function(r){c.toBlob(r,"image/jpeg",.82)})})}
+function upload(files){
+  return Promise.all(Array.prototype.map.call(files,function(f,i){
+    return shrink(f).then(function(bl){
+      var path=user.id+"/"+Date.now()+"_"+i+".jpg";
+      return sb.storage.from("photos").upload(path,bl,{contentType:"image/jpeg"}).then(function(r){if(r.error)throw r.error;return path});
+    });
+  }));
+}
+$("save").onclick=function(){
+  var files=$("f_img").files,type=$("f_type").value;
+  if(type==="sell"&&files.length<2){toast("Sifatini koʻrsatish uchun kamida 2 ta rasm tanlang");return}
+  if(files.length>5){toast("Koʻpi bilan 5 ta rasm");return}
+  var name=$("f_name").value.trim(),contact=$("f_contact").value.trim();
+  if(!name||!contact){toast("Nomi va aloqa maydonini toʻldiring");return}
+  $("save").disabled=true;$("save").textContent="Joylanmoqda…";
+  upload(files).then(function(paths){
+    return sb.from("listings").insert({type:type,category:$("f_cat").value,city:$("f_city").value||null,name:name,price:Number($("f_price").value)||0,descr:$("f_desc").value.trim(),contact:contact,imgs:paths});
+  }).then(function(r){
+    if(r.error)throw r.error;
+    $("f_img").value="";$("thumbs").innerHTML="";$("pick").textContent="Rasm tanlash";
+    ["f_name","f_price","f_desc"].forEach(function(i){$(i).value=""});
+    $("dlg").close();toast("Eʼlon joylandi");load();
+  }).catch(function(e){
+    var m=e.message||String(e);
+    toast(/column|schema/i.test(m)?"Bazada city/category ustunlari yoʻq. SQL buyrugʻini ishga tushiring.":"Joylab boʻlmadi: "+m);
+  }).then(function(){$("save").disabled=false;$("save").textContent="Joylash"});
+};
+
+/* ---------- boshlash ---------- */
+$("q").oninput=function(e){query=e.target.value.toLowerCase().trim();draw()};
+$("sort").onchange=draw;
+$("mycity").onclick=function(){
+  if(!myCity()){toast("Shahringizni bilish uchun roʻyxatdan oʻting");openAuth("s1");return}
+  onlyCity=!onlyCity;drawChips();draw();
+};
+fill($("s_c"),CITIES,"Shaharni tanlang");fill($("f_city"),CITIES,"Shaharni tanlang");fill($("f_cat"),CATS);
+$("s_b").max=new Date().toISOString().slice(0,10);
+eyes();drawChips();showBan();draw();hero();loadBans();
+if(sb){
+  sb.auth.getSession().then(function(r){setUser(r.data.session?r.data.session.user:null);load()});
+  sb.auth.onAuthStateChange(function(ev,session){setUser(session?session.user:null)});
+  setInterval(load,60000);
+}else load();
+</script>
 </body>
 </html>
